@@ -33,9 +33,9 @@ writeNodes(S) :-
 	(Bs = [] -> 
 		Q/M=true/0; 
 		member(A1,Bs), functor(A1,Q,M)),
-	writeGraphNode(Q/M,S),
-	write(S,' -> '),
 	writeGraphNode(P/N,S),
+	write(S,' -> '),
+	writeGraphNode(Q/M,S),
 	nl(S),
 	fail.
 writeNodes(_).
