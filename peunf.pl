@@ -219,7 +219,8 @@ unfoldForward([B|Bs],Us,R,[Tr|Trs],Qs) :-
 	Tr =.. [C1|T1],
 	unfoldForward(Bs,Us,R2,Trs,Qs2),
 	append(Qs1,Qs2,Qs),
-	append([B=B|R1],R2,R).
+	%append([B=B|R1],R2,R).
+	append(R1,R2,R).
 unfoldForward([B|Bs],Us,[B|R],[T|Ts],[Q|Qs]) :-
 	B =..[P|_],
 	Q =.. [P,T],
