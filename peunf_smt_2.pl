@@ -17,6 +17,7 @@
 :- use_module(chclibs(yices2_sat)).
 :- use_module(ciao_yices(ciao_yices_2)).
 :- use_module(chclibs(ppl_ops)).
+:- use_module(library(ppl)).
 :- use_module(chclibs(timer_ciao)).
 :- use_module(chclibs(program_loader)).
 :- include(chclibs(get_options)).
@@ -28,7 +29,6 @@
 
 :- dynamic(prop/2).
 :- dynamic(peClause/3).
-:- dynamic(preserveInitPred/0).
 
 
 
@@ -48,7 +48,7 @@ main(ArgV) :-
 	yices_init,
 	start_ppl,
 	proplist(L,_),
-	pe([(Goal:-[])],L,Us,[version(P/N,[])],AllVersions), % assume that the initial goal is unconstrained
+	pe([(Goal:-[])],L,Us,BPs,[version(P/N,[])],AllVersions), % assume that the initial goal is unconstrained
 	numberVersions(AllVersions,P/N,1,NVersions),
 	%end_time(user_output),
 	showVersionClauses(NVersions,L,OutS),
@@ -61,7 +61,6 @@ recognised_option('-prg',  program(R),[R]).
 recognised_option('-o',    outputFile(R),[R]).
 recognised_option('-props',propFile(R),[R]).
 recognised_option('-entry',entry(Q),[Q]).
-recognised_option('-init', preserveInitPred,[]).
 
 	
 setOptions(Options,File,Goal,OutS) :-
@@ -76,8 +75,6 @@ setOptions(Options,File,Goal,OutS) :-
 	(member(outputFile(OutFile),Options), open(OutFile,write,OutS); 
 			OutS=user_output),
 	(member(propFile(PFile),Options), readPropFile(PFile); 
-			true),
-	(member(preserveInitPred,Options), assert(preserveInitPred); 
 			true).
 			
 
@@ -87,8 +84,7 @@ convertQueryString(Q,Q1) :-
 
 cleanup :-
 	retractall(prop(_,_)),
-	retractall(peClause(_,_,_)),
-	retractall(preserveInitPred).
+	retractall(peClause(_,_,_)).
 	
 findBackEdges([P|Ps],M0,M3,Anc,Bs0,Bs3) :-
 	successors(P,Ss),
@@ -152,7 +148,6 @@ unfoldablePreds([],_,[]).
 unfoldablePreds([P|Ps],BPs,[P|Us]) :-
 	\+ member(P,BPs),
 	detPred(P),
-	(preserveInitPred -> \+ isInitPred(P); true),
 	!,
 	unfoldablePreds(Ps,BPs,Us).
 unfoldablePreds([_|Ps],BPs,Us) :-
@@ -162,20 +157,20 @@ hasDef(B) :-
 	my_clause(B,_,_),
 	!.
 
-isInitPred(P/_) :-
-	atom_concat(init,_,P).
+
 	
-pe([(A :- Ids)|Gs],L,Us,Versions0,Versions2) :-
+pe([(A :- Ids)|Gs],L,Us,BPs,Versions0,Versions2) :-
 	versionConstraints(A,Ids,L,Cs),
 	resultants(A,Cs,Us,Cls),
-	versionClauses(Cls,Ids,L,VCls),
+	versionClauses(Cls,BPs,Ids,L,VCls),
 	storeVersionClauses(VCls),
 	%showPeClauses,
 	newVersions(VCls,Versions0,Versions1,NewGs,Gs),
-	pe(NewGs,L,Us,Versions1,Versions2).
-pe([],_,_,Vs,Vs).
+	pe(NewGs,L,Us,BPs,Versions1,Versions2).
+pe([],_,_,_,Vs,Vs).
 
-
+versionConstraints(_,constraint(Cs),_,Cs) :-
+	!.
 versionConstraints(A,Ids,L,Cs) :-
 	functor(A,F,N),
 	getIds(F/N,L,HIs),
@@ -251,21 +246,44 @@ linearConstraints([C|Cs],[C|LCs],NLCs) :-
 linearConstraints([C|Cs],LCs,[C|NLCs]) :-
 	linearConstraints(Cs,LCs,NLCs).
 
-versionClauses([],_,_,[]).
-versionClauses([((A :- LCs,HCs,NLCs,Bs),_)|Cls],Ids,L,[(atom(A,Ids) :- LCs,HCs,NLCs,VBs)|VCls]) :-
-	bodyVersions(Bs,LCs,HCs,L,VBs),
-	versionClauses(Cls,Ids,L,VCls).
+versionClauses([],_,_,_,[]).
+versionClauses([((A :- LCs,HCs,NLCs,Bs),_)|Cls],BPs,Ids,L,[(atom(A,Ids) :- LCs,HCs,NLCs,VBs)|VCls]) :-
+	bodyVersions(Bs,BPs,LCs,HCs,L,VBs),
+	versionClauses(Cls,BPs,Ids,L,VCls).
 
-bodyVersions([],_,_,_,[]).
-bodyVersions([B|Bs],LCs,HCs,L,[atom(B,Ids)|Bs1]) :-
-	abstractVersion(B,LCs,HCs,L,Ids),
-	bodyVersions(Bs,LCs,HCs,L,Bs1).
+bodyVersions([],_,_,_,_,[]).
+bodyVersions([B|Bs],BPs,LCs,HCs,L,[atom(B,Ids)|Bs1]) :-
+	abstractVersion(B,BPs,LCs,HCs,L,Ids),
+	bodyVersions(Bs,BPs,LCs,HCs,L,Bs1).
 		
-abstractVersion(B,LCs,HCs,L,Ids) :-
+abstractVersion(B,BPs,LCs,HCs,L,Ids) :-
+	functor(B,P,N),
+	member(P/N,BPs),
+	!,
 	melt((B,LCs,HCs),(B1,LCs1,HCs1)),
 	varset(B1,Xs),
 	numbervars((Xs,LCs1,HCs1),0,_),
 	predicate_abstract(B1,[LCs1,HCs1],L,Ids).
+abstractVersion(B,_,LCs,HCs,_,constraint(Cs)) :-
+	% not a back-edge predicate, no need to abstract
+	posConstraint(HCs,LCs,PCs),
+	melt((B,PCs),(B1,PCs1)),
+	varset(B1,Xs),
+	varset((B1,PCs1),Ys),
+	numbervars((Xs,PCs1),0,_),
+	length(Ys,N),
+	makePolyhedron(PCs1,H1),
+	ppl_Polyhedron_add_space_dimensions_and_embed(H1,N),
+	setdiff(Ys,Xs,Zs),
+	project(H1,Zs,Hp),
+	getConstraint(Hp,Cs).
+	
+posConstraint([neg(_)|HCs],LCs,PCs) :-
+	!,
+	posConstraint(HCs,LCs,PCs).
+posConstraint([C|HCs],LCs,[C|PCs]) :-
+	posConstraint(HCs,LCs,PCs).
+posConstraint([],LCs,LCs).
 	
 newVersions([(_ :- _,_,_,Bs)|VCls],Versions0,Versions2,Gs0,Gs2) :-
 	collectVersions(Bs,Versions0,Versions1,Gs0,Gs1),
@@ -382,7 +400,18 @@ showVersionClauses(NVersions,L,S) :-
 	nl(S),
 	showVersionClauses2(NVersions,S).
 	
-
+writeVersions(S,[nversion(Q/M,constraint(Cs),P1)|Vs],L) :-
+	!,
+	functor(A,Q,M),
+	A =.. [_|Xs],
+	A1 =.. [P1|Xs],
+	numbervars(A1,0,_),
+	write(S,'% '),
+	write(S, [P1]),
+	write(S, ': '),
+	write(S,(A1 :- Cs)),
+	nl(S),
+	writeVersions(S,Vs,L).
 writeVersions(S,[nversion(Q/M,Ids,P1)|Vs],L) :-
 	getIds(Q/M,L,HIs),
 	selectIds(Ids,HIs,Hs1),
