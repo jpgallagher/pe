@@ -19,34 +19,35 @@
 	
 main(ArgV) :-
 	cleanup,
-	setOptions(ArgV,File,OutS),
+	setOptions(ArgV,File,M,OutS),
 	load_file(File),
-	makeFacts,
+	makeFacts(M),
 	start_ppl,
 	%preds(Ps),
 	%initProps(Ps),
-	genprops,
+	genprops(M),
 	showallprops(OutS),
 	nl(OutS),
 	close(OutS),
 	end_ppl.
 	
-makeFacts :-
+makeFacts(M) :-
 	my_clause(H,B,_),
 	separate_constraints(B,Cs,Bs),
 	assert(fact(H,Cs)), %relates to head constraints, useful for answers rather than call predicates
-	member(B1,Bs),
-	assert(fact(B1,Cs)),
+	(M > 2 -> (member(B1,Bs), assert(fact(B1,Cs)))),
 	fail.
-makeFacts.
+makeFacts(_).
 	
 	
-setOptions(ArgV,File,OutS) :-
+setOptions(ArgV,File,M,OutS) :-
 	get_options(ArgV,Options,_),
-	(member(programO(File),Options); 
+	(member(programO(File),Options) -> true; 
 			write(user_output,'No input file given.'),nl(user_output)),
-	(member(outputFile(OutFile),Options), open(OutFile,write,OutS); 
-			OutS=user_output).
+	(member(outputFile(OutFile),Options) -> open(OutFile,write,OutS); 
+			OutS=user_output),
+	(member(level(N),Options), atom_number(N,M), M>0, M<5 -> true; 
+			M=1, write(user_output,'Level 1 assumed.'),nl(user_output)).
 
 % get_options/3 provided by Michael Leuschel
 get_options([],[],[]).
@@ -66,6 +67,7 @@ get_options([X|T],Options,Args) :-
 
 recognised_option('-prg',  programO(R),[R]).
 recognised_option('-o',    outputFile(R),[R]).
+recognised_option('-l',    level(N),[N]).
 
 
 cleanup :-
@@ -88,7 +90,7 @@ assert_top_values([P/N|Ps]) :-
 	assert(prop(A,[])),
 	assert_top_values(Ps).
 	
-genprops :-
+genprops(M) :-
 	fact(A,Cs),
 	A =.. [_|Xs],
 	solve(Xs,Cs,H,Cs1),
@@ -97,9 +99,9 @@ genprops :-
 	functor(A,_,N),
 	projectVars(Xs,[],N,H,Cs2),
 	append(Cs1,Cs2,Cs3),
-	assert_each_atom_prop(Cs3,A),
+	(member(M,[2,4]) -> assert_each_atom_prop(Cs3,A)),
 	fail.
-genprops.
+genprops(_).
 
 solve(Xs,Cs,Hp,Cs1) :-
 	linearize(Cs,CsL),
