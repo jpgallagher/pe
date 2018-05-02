@@ -221,7 +221,7 @@ unfoldForward([B|Bs],Us,R,[Tr|Trs],Qs) :-
 	Tr =.. [C1|T1],
 	unfoldForward(Bs,Us,R2,Trs,Qs2),
 	append(Qs1,Qs2,Qs),
-	append([B=B|R1],R2,R).
+	append(R1,R2,R).
 unfoldForward([B|Bs],Us,[B|R],[T|Ts],[Q|Qs]) :-
 	B =..[P|_],
 	Q =.. [P,T],
@@ -239,7 +239,7 @@ feasibleClauses([((A :-B),Trans)|Cls0],P/N,Cs,[((A :- Cs3,NLCs,Bs),Trans)|Cls]) 
 	numbervars((A,B),0,_),
 	satisfiable(Cs2),
 	!,
-	simplify(Cs2,Cs3),
+	simplify(Cs2,Cs3),	% needed to remove trivial constraints
 	feasibleClauses(Cls0,P/N,Cs,Cls).
 feasibleClauses([_|Cls0],P/N,Cs,Cls) :-	
 	feasibleClauses(Cls0,P/N,Cs,Cls).
@@ -339,9 +339,6 @@ predicate_abstract(Head,F,L,Ids) :-
 	functor(Head,P,N),
 	predAbstract(P/N,F,L,Ids).
 
-%predAbstract(P/N,F,_,[init(F)]) :-
-%	isInitPred(P/N),
-%	!.
 predAbstract(P/N,F,Props,Ids) :-
 	member(pred(P/N,LPs),Props),
 	!,
@@ -361,7 +358,6 @@ satisfiable(Cs) :-
 	varset(MCs,Vs),
 	linearConstraints(MCs,LCs,_),
 	numbervars(Vs,0,_),
-	yices_init,
 	yices_vars(Vs,real,Ws),
 	yices_sat(LCs,Ws).
 	
@@ -370,19 +366,7 @@ showVersionClauses(NVersions,L,S) :-
 	nl(S),
 	showVersionClauses2(NVersions,S).
 	
-/*writeVersions(S,[nversion(Q/M,[init(Cs)],P1)|Vs],L) :-
-	!,
-	functor(A,Q,M),
-	A =.. [_|Xs],
-	A1 =.. [P1|Xs],
-	numbervars(A1,0,_),
-	write(S,'% '),
-	write(S, [P1]),
-	write(S, ': '),
-	write(S,(A1 :- Cs)),
-	nl(S),
-	writeVersions(S,Vs,L).
-	*/
+
 writeVersions(S,[nversion(Q/M,Ids,P1)|Vs],L) :-
 	getIds(Q/M,L,HIs),
 	selectIds(Ids,HIs,Hs1),
@@ -413,13 +397,7 @@ showVersionClauses2(NVersions,S) :-
 	fail.
 showVersionClauses2(_,_).
 
-/*atomRename(atom(A,[init(Cs)]),NVersions,A1) :-
-	functor(A,P,N),
-	A =.. [P|Xs],
-	member(nversion(P/N,[init(Cs)],P1),NVersions),
-	A1 =.. [P1|Xs],
-	!.
-*/
+
 atomRename(atom(A,Ids),NVersions,A1) :-
 	functor(A,P,N),
 	A =.. [P|Xs],
