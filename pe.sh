@@ -26,7 +26,7 @@ if (test ! -d $resultdir) then
 fi
 
 $PE/props -prg "$1" -o "$resultdir/$f.props"
-$PE/peunf -prg "$1" -entry "$2" -props "$resultdir/$f.props" -o "$resultdir/$f.pe.pl" 
+$PE/peunf_smt_2 -prg "$1" -entry "$2" -props "$resultdir/$f.props" -o "$resultdir/$f.pe.pl" 
 
 if [[ $draw -eq 1 ]]; then
   $PE/drawcfg -prg "$resultdir/$f.pe.pl" -o "$resultdir/cfg.txt"
