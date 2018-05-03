@@ -277,6 +277,7 @@ abstractVersion(B,_,LCs,HCs,_,constraint(Cs)) :-
 	setdiff(Ys,Xs,Zs),
 	project(H1,Zs,Hp),
 	getConstraint(Hp,Cs).
+
 	
 posConstraint([neg(_)|HCs],LCs,PCs) :-
 	!,
@@ -301,10 +302,10 @@ collectVersions([atom(A,Ids)|Bs],Vs0,Vs1,Gs0,Gs1) :-
 collectVersions([],Vs,Vs,Gs,Gs).
 
 storeVersionClauses([]).
-storeVersionClauses([(atom(A,Ids) :- LCs,_HCs,NLCs,Bs)|VCls]) :-
+storeVersionClauses([(atom(A,Ids) :- LCs,HCs,NLCs,Bs)|VCls]) :-
 	append(LCs,NLCs,Cs1),
-	%append(HCs,Cs1,Cs2),
-	assert(peClause(atom(A,Ids),Cs1,Bs)),
+	posConstraint(HCs,Cs1,Cs2),
+	assert(peClause(atom(A,Ids),Cs2,Bs)),
 	storeVersionClauses(VCls).
 
 readPropFile(PFile) :-
