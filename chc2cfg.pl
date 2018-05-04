@@ -180,15 +180,7 @@ unifyNames([VX='$VAR'(X)|Ns]) :-
 	unifyNames(Ns).
 	
 
-/*	
-getInitNode(Init) :-
-	my_clause(H,B,_),
-	functor(H,F,_),
-	F == startpoint,
-	!,
-	separate_constraints(B,_,[B1]),
-	functor(B1,Init,_).
-*/
+
 
 localvars(Cs1) :-
 	varset(Cs1,Vs),
