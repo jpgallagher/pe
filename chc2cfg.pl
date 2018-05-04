@@ -1,6 +1,6 @@
 % Translate PE-d CHCs to CFG form.  
 % Optionally use the original file before PE for variable names 
-% Assume that the first clauses are of the form startpoint(...) :- S, where S is the initial node of the CFG
+% Option -init S.  S is the initial node of the CFG
 
 :- module(chc2cfg,_,[]).
 
@@ -13,12 +13,15 @@
 :- use_module(library(read)).
 :- use_module(library(dynamic)).
 :- use_module(library(lists)).
+:- use_module(library(read_from_string), [read_from_atom/2]).
+
 
 
 
 :- data flag/1.
 
 :- dynamic(trcount/1).
+:- dynamic(initNode/1).
 
 
 	
@@ -32,6 +35,7 @@ main(ArgV) :-
 
 recognised_option('-prg',  program(R),[R]).
 recognised_option('-o',    outputFile(R),[R]).
+recognised_option('-init', initNode(N),[N]).
 recognised_option('-cfg',  cfgFile(R),[R]).
 
 	
@@ -42,12 +46,20 @@ setOptions(Options,File,CfgFile,OutS) :-
 			fail),
 	(member(outputFile(OutFile),Options), open(OutFile,write,OutS); 
 			OutS=user_output),
+	(member(initNode(N),Options), convertQueryString(N,N1),functor(N1,Init,_),assert(initNode(Init));
+			write(user_output,'No initial node given.'),
+			nl(user_output), 
+			fail),
 	(member(cfgFile(CfgFile),Options); 
 			CfgFile=File).
 			
+convertQueryString(Q,Q1) :-
+	read_from_atom(Q,Q1).
+			
 cleanup :-
 	retractall(my_clause(_,_,_)),
-	retractall(trcount(_)).
+	retractall(trcount(_)),
+	retractall(initNode(_)).
 	
 showTransitions(CfgFile,S) :-
 	getStateVars(CfgFile, Vs,Vs1),
@@ -62,7 +74,7 @@ showTransitions(CfgFile,S) :-
 	write(S,','),
 	nlIndent(S),
 	write(S,'init_node: '),
-	getInitNode(Init),
+	initNode(Init),
 	write(S,Init),
 	write(S,','),
 	nlIndent(S),
@@ -88,10 +100,11 @@ nlIndent2(S) :-
 showGlobals(_NVersions,_S).
 	
 showTransitions2(S,Vs,Vs1) :-
+	%initNode(Init),
 	my_clause(Source,B,_),
 	separate_constraints(B,Cs,[Target]),
-	functor(Source,F,_),
-	F \== startpoint,
+	%functor(Source,F,_),
+	%F \== Init,
 	nlIndent2(S),
 	write(S,'{'),
 	Source =.. [P1|Vs],
@@ -148,15 +161,16 @@ getStateVars(File,Vs,Vs1):-
 	
 getTransitionClause(S,C,Ws) :-
 	read_term(S,C1,[variable_names(Ws1)]),	
-	ignoreStartClauses(C1,S,C,Ws1,Ws).
+	initNode(Init),
+	ignoreStartClauses(C1,Init,S,C,Ws1,Ws).
 
-ignoreStartClauses(C1,S,C,_,Ws):-
+ignoreStartClauses(C1,Init,S,C,_,Ws):-
 	C1 = (H :- _),
-	functor(H,startpoint,_),
+	functor(H,Init,_),
 	!,
 	read_term(S,C2,[variable_names(Ws2)]),
-	ignoreStartClauses(C2,S,C,Ws2,Ws).
-ignoreStartClauses(C,_,C,Ws,Ws).
+	ignoreStartClauses(C2,Init,S,C,Ws2,Ws).
+ignoreStartClauses(C,_,_,C,Ws,Ws).
 
 
 	
@@ -166,7 +180,7 @@ unifyNames([VX='$VAR'(X)|Ns]) :-
 	unifyNames(Ns).
 	
 
-	
+/*	
 getInitNode(Init) :-
 	my_clause(H,B,_),
 	functor(H,F,_),
@@ -174,6 +188,7 @@ getInitNode(Init) :-
 	!,
 	separate_constraints(B,_,[B1]),
 	functor(B1,Init,_).
+*/
 
 localvars(Cs1) :-
 	varset(Cs1,Vs),
