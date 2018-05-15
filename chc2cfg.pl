@@ -82,6 +82,7 @@ showTransitions(CfgFile,S) :-
 	nl(S),
 	assert(trcount(0)),
 	showTransitions2(S,Vs,Vs1),
+	nlIndent(S),
 	write(S,']'),
 	nl(S),
 	write(S,'}'),
@@ -135,10 +136,7 @@ showTransitions2(S,Vs,Vs1) :-
 	fail.
 showTransitions2(_,_,_).
 
-writeConstraints(S,[C]) :-
-	!,
-	write(S,'               '),
-	write(S,C).
+writeConstraints(_,[]).
 writeConstraints(S,[C|Cs]) :-
 	write(S,'               '),
 	write(S,C),
