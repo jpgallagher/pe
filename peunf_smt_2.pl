@@ -29,6 +29,7 @@
 
 :- dynamic(prop/2).
 :- dynamic(peClause/3).
+:- dynamic(negprops/0).
 
 
 
@@ -60,6 +61,7 @@ main(ArgV) :-
 recognised_option('-prg',  program(R),[R]).
 recognised_option('-o',    outputFile(R),[R]).
 recognised_option('-props',propFile(R),[R]).
+recognised_option('-neg',  negprops,[]).
 recognised_option('-entry',entry(Q),[Q]).
 
 	
@@ -74,6 +76,7 @@ setOptions(Options,File,Goal,OutS) :-
 			fail),
 	(member(outputFile(OutFile),Options), open(OutFile,write,OutS); 
 			OutS=user_output),
+	(member(negprops,Options) -> assert(negprops); true),
 	(member(propFile(PFile),Options), readPropFile(PFile); 
 			true).
 			
@@ -84,6 +87,7 @@ convertQueryString(Q,Q1) :-
 
 cleanup :-
 	retractall(prop(_,_)),
+	retractall(negprops),
 	retractall(peClause(_,_,_)).
 	
 findBackEdges([P|Ps],M0,M3,Anc,Bs0,Bs3) :-
@@ -382,6 +386,7 @@ selectProps([C1-Id|LPs],F,[Id|Ids]) :-
 	!,
 	selectProps(LPs,F,Ids).
 selectProps([C1-Id|LPs],F,[neg(Id)|Ids]) :-
+	negprops,
 	peunf_smt_2:contains(neg(C1),F),
 	!,
 	selectProps(LPs,F,Ids).
