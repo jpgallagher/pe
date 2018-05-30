@@ -229,15 +229,18 @@ unfoldForward([],_,[],[],[]).
 feasibleClauses([],_,_,[]).
 feasibleClauses([((A :-B),Trans)|Cls0],P/N,Cs,[((A :- LCs3,HCs,NLCs,Bs),Trans)|Cls]) :-
 	separate_constraints(B,Cs1,Bs),
+	varset((A,Bs),Xs),
 	linearConstraints(Cs1,LCs,NLCs),
 	functor(H,P,N),
 	numbervars(H,0,_),
 	melt((H,Cs),(A,HCs)),
 	append(HCs,LCs,Cs2),
-	numbervars((A,B),0,_),
+	varset(Cs2,Ys),
+	numbervars((A,Bs,Cs2),0,_),
 	satisfiable(Cs2),
 	!,
-	simplify(LCs,LCs3),
+	setdiff(Ys,Xs,Zs),
+	simplify(LCs,Zs,LCs3),
 	feasibleClauses(Cls0,P/N,Cs,Cls).
 feasibleClauses([_|Cls0],P/N,Cs,Cls) :-	
 	feasibleClauses(Cls0,P/N,Cs,Cls).
@@ -508,9 +511,10 @@ contains(C1,C2) :-
 	yices_vars(Vs,real,Ws),
 	yices_unsat(E,Ws).
 	
-simplify(Cs,Cs1) :-
+simplify(Cs,Zs,Cs1) :-
 	makePolyhedron(Cs,H),
-	getConstraint(H,Cs1).
+	project(H,Zs,H1),
+	getConstraint(H1,Cs1).
 
 numberVersions([version(P/N,[])|AllVersions],P/N,K,[nversion(P/N,[],P)|NVersions]) :-
 	!, % initial goal not renamed

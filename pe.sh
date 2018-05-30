@@ -25,7 +25,7 @@ if (test ! -d $resultdir) then
         mkdir $resultdir
 fi
 
-$PE/props -prg "$1" -l 3 -o "$resultdir/$f.props"
+$PE/props -prg "$1" -l 1 -o "$resultdir/$f.props"
 $PE/peunf_smt_2 -prg "$1" -entry "$2" -props "$resultdir/$f.props" -o "$resultdir/$f.pe.pl" 
 #$PE/peunf_smt -prg "$1" -entry "$2" -props "$resultdir/$f.props" -o "$resultdir/$f.pe.pl" 
 

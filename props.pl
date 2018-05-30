@@ -16,6 +16,12 @@
 :- dynamic(prop/2).
 :- dynamic(propfact/2).
 
+% -l argument
+% 1 = head constraints 
+% 2 = head constraints with projection onto individual variables
+% 3 = head and call constraints 
+% 4 = head and call constraints with projection onto individual variables
+
 	
 main(ArgV) :-
 	cleanup,
