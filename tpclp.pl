@@ -26,7 +26,7 @@
 	
 main(ArgV) :- 
 	cleanup,
-	write('Starting analysis'),nl,
+	%write('Starting analysis'),nl,
 	get_options(ArgV,Options,_),
 	(member(programO(File),Options); 
 			write(user_output,'No input file given.'),nl(user_output)),
@@ -35,10 +35,11 @@ main(ArgV) :-
 	(member(findCEx,Options) -> assert(findCEx); true),
 	
 	start_time,
+	write(File),nl,
 	load_file(File),	
 	ppl_initialize,
-	ppl_version(Pv),
-	write('PPL version used: '),write(Pv),nl,
+	%ppl_version(Pv),
+	%write('PPL version used: '),write(Pv),nl,
 	assert(flag(first,0)),
 	assert(operatorCount(0)),
 	% Compute the model and display it
@@ -48,7 +49,8 @@ main(ArgV) :-
 	end_time(user_output),
 	%nl(OutS), showallfacts(OutS), nl(OutS),
 	close(OutS),
-	ppl_finalize.
+	ppl_finalize,
+	halt(1).
 
 % get_options/3 provided by Michael Leuschel
 get_options([],[],[]).
@@ -86,7 +88,7 @@ iterate :-
 	assert(operatorCount(K1)),
 	retractflags(K),
 	!,
-	write(K),nl,
+	%write(K),nl,
 	%showallfacts(user_output),
 	iterate.
 iterate.
