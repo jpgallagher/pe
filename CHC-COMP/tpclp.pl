@@ -35,7 +35,7 @@ main(ArgV) :-
 	(member(findCEx,Options) -> assert(findCEx); true),
 	
 	start_time,
-	write(File),nl,
+	%write(File),nl,
 	load_file(File),	
 	ppl_initialize,
 	%ppl_version(Pv),
@@ -46,7 +46,7 @@ main(ArgV) :-
 	iterate,
 	%write('Analysis Succeeded'),
 	nl,
-	end_time(user_output),
+	%end_time(user_output),
 	%nl(OutS), showallfacts(OutS), nl(OutS),
 	close(OutS),
 	ppl_finalize,
