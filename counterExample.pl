@@ -11,6 +11,7 @@
 :- data flag/1.
 
 :- dynamic(qa/0).
+:- dynamic(type/1).
 
 main(ArgV) :-
 	counterExample:cleanup,
@@ -38,8 +39,8 @@ existsCex(S,_,Cex) :-
 	
 checkCounterExample(no,_) :-
 	!,
-	write('Program is safe'),
-	nl,
+	%write('Program is safe'),
+	%nl,
 	halt(1).
 checkCounterExample(Cex,F) :-
 	load_file(F),
@@ -48,14 +49,14 @@ checkCounterExample(Cex,F) :-
 	),
 	!,
 	yices_exit,
-	write('Program is unsafe'),
-	nl,
+	%write('Program is unsafe'),
+	%nl,
 	halt(0).
 checkCounterExample(_,_) :-
 	yices_exit,
-	write('Program might be unsafe'),
-	nl,
-	nl,
+	%write('Program might be unsafe'),
+	%nl,
+	%nl,
 	halt(2).
 	
 checkTrace(A,_,Trace) :-
@@ -82,7 +83,8 @@ feasible(Cs) :-
 	linearConstraints(Cs,LCs,_),
 	numbervars(Vs,0,_),
 	yices_init,
-	yices_vars(Vs,real,Ws),
+	type(T),
+	yices_vars(Vs,T,Ws),
 	yices_sat(LCs,Ws).
 	
 linearConstraints([],[],[]).
@@ -96,6 +98,7 @@ linearConstraints([C|Cs],LCs,[C|NLCs]) :-
 recognised_option('-prg',  program(R),[R]).
 recognised_option('-cex',  cexFile(R),[R]).
 recognised_option('-qa',  qa,[]).
+recognised_option('-type',  type(T),[T]).
 
 	
 setOptions(Options,File,CexS) :-
@@ -105,8 +108,10 @@ setOptions(Options,File,CexS) :-
 			fail),
 	(member(cexFile(OutFile),Options) -> open(OutFile,read,CexS); 
 			open("traceterm.out",read,CexS)),
-	(member(qa,Options) -> assert(qa); true).
+	(member(qa,Options) -> assert(qa); true),
+	(member(type(T),Options), member(T,[int,real]) -> assert(type(T)); assert(type(real))).
 	
 cleanup :-
-	retractall(qa).
+	retractall(qa),
+	retractall(type(_)).
 	
