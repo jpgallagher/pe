@@ -15,11 +15,11 @@ function spec() {
    #echo "Performing query transformation"
    $LIB/qa $infile -query false -ans -o $resultdir/$f.qa.pl
    #echo "Computing widening thresholds"
-   $LIB/thresholds1 -prg $resultdir/$f.qa.pl -a -o wut.props
-   #$PE/props -prg "$resultdir/$f.qa.pl" -l 1 -o wut.props
+   #$LIB/thresholds1 -prg $resultdir/$f.qa.pl -a -o wut.props
+   $PE/props -prg "$resultdir/$f.qa.pl" -l 1 -o wut.props
    
    #echo "Computing convex polyhedron approximation of QA clauses"
-   $LIB/cpascc -prg $resultdir/$f.qa.pl -cex "traceterm.out"  -withwut -wfunc h79 -o $resultdir/$f.qa.cha.pl
+   $LIB/cpascc -prg $resultdir/$f.qa.pl -cex "traceterm.out" -v -withwut -wfunc h79 -o $resultdir/$f.qa.cha.pl
    #echo "Specialise clauses"
    $LIB/insertProps -prg $infile -props $resultdir/$f.qa.cha.pl -o $outfile
 }

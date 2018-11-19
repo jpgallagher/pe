@@ -246,6 +246,10 @@ feasibleClauses([_|Cls0],P/N,Cs,Cls) :-
 	feasibleClauses(Cls0,P/N,Cs,Cls).
 	
 linearConstraints([],[],[]).
+linearConstraints([neg(C)|Cs],[neg(C1)|LCs],[neg(Cs)|NLCs]) :-
+	!,
+	linearConstraints(C,C1,_),
+	linearConstraints(Cs,LCs,NLCs).
 linearConstraints([C|Cs],[C|LCs],NLCs) :-
 	linear_constraint(C),
 	!,

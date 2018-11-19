@@ -50,6 +50,7 @@ main(ArgV) :-
 	%nl(OutS), showallfacts(OutS), nl(OutS),
 	close(OutS),
 	ppl_finalize,
+	write('Safe'),nl,
 	halt(1).
 
 % get_options/3 provided by Michael Leuschel
@@ -117,6 +118,7 @@ checkCounterExample(Head) :-
 foundCEx(Head) :-	
 	findCEx,
 	isFalsePred(Head),
+	write('Unsafe'),nl,
 	halt(0).
 	
 isFalsePred(false) :-
