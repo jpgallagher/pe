@@ -1,11 +1,12 @@
 % Specialise a program wrt to a goal and a set of properties
 
 %:- module(peunf_smt_2,[main/1],[]).
-:- module(peunf_smt_2,_,[]).
+:- module(peunf_smt_2,_,[dynamic]).
 
+:- use_module(library(streams)).
 :- use_module(library(write)).
 :- use_module(library(read)).
-:- use_module(library(dynamic)).
+%:- use_module(library(dynamic)).
 :- use_module(library(lists)).
 :- use_module(library(aggregates)).
 :- use_module(chclibs(builtins)).
