@@ -21,6 +21,8 @@
 % 2 = head constraints with projection onto individual variables
 % 3 = head and call constraints 
 % 4 = head and call constraints with projection onto individual variables
+% 5 = call constraints 
+
 
 	
 main(ArgV) :-
@@ -40,7 +42,7 @@ main(ArgV) :-
 makeFacts(M) :-
 	my_clause(H,B,_),
 	separate_constraints(B,Cs,Bs),
-	assert(fact(H,Cs)), %relates to head constraints, useful for answers rather than call predicates
+	(M < 5 -> assert(fact(H,Cs)); true), %relates to head constraints, useful for answers rather than call predicates
 	(M > 2 -> (member(B1,Bs), assert(fact(B1,Cs)))),
 	fail.
 makeFacts(_).
@@ -52,7 +54,7 @@ setOptions(ArgV,File,M,OutS) :-
 			write(user_output,'No input file given.'),nl(user_output)),
 	(member(outputFile(OutFile),Options) -> open(OutFile,write,OutS); 
 			OutS=user_output),
-	(member(level(N),Options), atom_number(N,M), M>0, M<5 -> true; 
+	(member(level(N),Options), atom_number(N,M), M>0, M<6 -> true; 
 			M=1, write(user_output,'Level 1 assumed.'),nl(user_output)).
 
 % get_options/3 provided by Michael Leuschel
