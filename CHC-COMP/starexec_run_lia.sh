@@ -2,10 +2,15 @@
 
 # $1 = input file
 
+CS0=".."
+LIB="$CIAOPATH/build/bin"
+PE="/Users/jpg/Research/LP/clptools/predabs/pe/CHC-COMP"
+PRE="/Users/jpg/Research/LP/clptools/predabs/pe/CHC-COMP"
 
-LIB="$HOME/.ciao/build/bin"
-BIN="."
-PRE="."
+#export CIAOPATH="$CS0/ciao_bundles"
+#export CIAOROOT="$CS0/bin/ciao"
+#export PYTHONPATH="$CS0/z3/build/python"
+#export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CIAOROOT/third-party/lib:$CS0/z3
 
 
 # constraint specialisation
@@ -16,7 +21,7 @@ function spec() {
    $LIB/qa $infile -query false -ans -o $resultdir/$f.qa.pl
    #echo "Computing widening thresholds"
    $LIB/thresholds1 -prg $resultdir/$f.qa.pl -a -o wut.props
-   #$BIN/props -prg "$resultdir/$f.qa.pl" -l 1 -o wut.props
+   #$PE/props -prg "$resultdir/$f.qa.pl" -l 1 -o wut.props
    
    #echo "Computing convex polyhedron approximation of QA clauses"
    $LIB/cpascc -prg $resultdir/$f.qa.pl -cex "traceterm.out"  -withwut -wfunc h79 -o $resultdir/$f.qa.cha.pl
@@ -26,7 +31,7 @@ function spec() {
 
 function checksafe() {
     local file=$1
-    $BIN/counterExample -prg $file -cex "traceterm.out" -qa
+    $PE/counterExample -prg $file -cex "traceterm.out" -qa
     retval=$? 
     # return the result from counterExample1
     #if [[ $retval -eq 0 ]]; then
@@ -42,8 +47,8 @@ function checksafe() {
 function pe() {
     local file=$1
     local outfile=$2
-    $BIN/props -prg "$file" -l 3 -o "$resultdir/$f.props"
-    $BIN/peunf_smt_2 -prg "$file" -entry false -props "$resultdir/$f.props" -o "$resultdir/$f.pe.pl" 
+    $PE/props -prg "$file" -l 3 -o "$resultdir/$f.props"
+    $PE/peunf_smt_2 -prg "$file" -entry false -props "$resultdir/$f.props" -o "$resultdir/$f.pe.pl" 
 }
 
 #=================
@@ -59,8 +64,8 @@ fi
 
 #echo $1
 # Translation from competition format to Prolog-readable form
-/bin/python $PRE/format/format.py --split_queries True "$1" > "$resultdir/$f.pl"
-$PRE/chcNorm "$resultdir/$f.pl" "$resultdir/$f.norm.pl" 
+python $PRE/format/format.py --split_queries True "$1" > "$resultdir/$f.pl"
+$PRE/chcNorm "$resultdir/$f.pl" "$resultdir/$f.norm.pl" -int
 prog="$resultdir/$f.norm.pl"
 
 
@@ -71,7 +76,7 @@ prog="$resultdir/$f.raf.pl"
 # search for counterexamples first for 15 seconds
 #tlimit="0.25m"
 #result="unknown"
-#timeout $tlimit $BIN/tpclp -prg "$prog" -cex
+#timeout $tlimit $PE/tpclp -prg "$prog" -cex
 #ret=$?
 #terminate=0
 #if [[ $ret -eq 0 ]]; then

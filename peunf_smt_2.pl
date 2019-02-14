@@ -29,7 +29,7 @@
 :- data flag/1.
 
 :- dynamic(prop/2).
-:- dynamic(peClause/3).
+:- dynamic(peClause/4).
 :- dynamic(negprops/0).
 
 
@@ -54,6 +54,7 @@ main(ArgV) :-
 	numberVersions(AllVersions,P/N,1,NVersions),
 	%end_time(user_output),
 	showVersionClauses(NVersions,L,OutS),
+	%showFTA(NVersions,OutS),
 	close(OutS),
 	yices_exit,
 	end_ppl.	
@@ -85,11 +86,10 @@ setOptions(Options,File,Goal,OutS) :-
 convertQueryString(Q,Q1) :-
 	read_from_atom(Q,Q1).
 
-
 cleanup :-
 	retractall(prop(_,_)),
 	retractall(negprops),
-	retractall(peClause(_,_,_)).
+	retractall(peClause(_,_,_,_)).
 	
 findBackEdges([P|Ps],M0,M3,Anc,Bs0,Bs3) :-
 	successors(P,Ss),
@@ -259,7 +259,7 @@ linearConstraints([C|Cs],LCs,[C|NLCs]) :-
 	linearConstraints(Cs,LCs,NLCs).
 
 versionClauses([],_,_,_,[]).
-versionClauses([((A :- LCs,HCs,NLCs,Bs),_)|Cls],BPs,Ids,L,[(atom(A,Ids) :- LCs,HCs,NLCs,VBs)|VCls]) :-
+versionClauses([((A :- LCs,HCs,NLCs,Bs),Trans)|Cls],BPs,Ids,L,[(atom(A,Ids) :- LCs,HCs,NLCs,VBs,Trans)|VCls]) :-
 	bodyVersions(Bs,BPs,LCs,HCs,L,VBs),
 	versionClauses(Cls,BPs,Ids,L,VCls).
 
@@ -289,7 +289,6 @@ abstractVersion(B,_,LCs,HCs,_,constraint(Cs)) :-
 	setdiff(Ys,Xs,Zs),
 	project(H1,Zs,Hp),
 	getConstraint(Hp,Cs).
-
 	
 posConstraint([neg(_)|HCs],LCs,PCs) :-
 	!,
@@ -298,7 +297,7 @@ posConstraint([C|HCs],LCs,[C|PCs]) :-
 	posConstraint(HCs,LCs,PCs).
 posConstraint([],LCs,LCs).
 	
-newVersions([(_ :- _,_,_,Bs)|VCls],Versions0,Versions2,Gs0,Gs2) :-
+newVersions([(_ :- _,_,_,Bs,_)|VCls],Versions0,Versions2,Gs0,Gs2) :-
 	collectVersions(Bs,Versions0,Versions1,Gs0,Gs1),
 	newVersions(VCls,Versions1,Versions2,Gs1,Gs2).
 newVersions([],Vs,Vs,Gs,Gs).
@@ -314,10 +313,10 @@ collectVersions([atom(A,Ids)|Bs],Vs0,Vs1,Gs0,Gs1) :-
 collectVersions([],Vs,Vs,Gs,Gs).
 
 storeVersionClauses([]).
-storeVersionClauses([(atom(A,Ids) :- LCs,HCs,NLCs,Bs)|VCls]) :-
+storeVersionClauses([(atom(A,Ids) :- LCs,HCs,NLCs,Bs,Trans)|VCls]) :-
 	append(LCs,NLCs,Cs1),
 	posConstraint(HCs,Cs1,Cs2),
-	assert(peClause(atom(A,Ids),Cs2,Bs)),
+	assert(peClause(atom(A,Ids),Cs2,Bs,Trans)),
 	storeVersionClauses(VCls).
 
 readPropFile(PFile) :-
@@ -443,7 +442,7 @@ writeVersions(S,[nversion(Q/M,Ids,P1)|Vs],L) :-
 writeVersions(_,[],_).
 		
 showVersionClauses2(NVersions,S) :-
-	peClause(H,Cs,Bs),
+	peClause(H,Cs,Bs,_),
 	atomRename(H,NVersions,A),
 	bodyRename(Bs,NVersions,Bs1),
 	append(Cs,Bs1,B),
@@ -456,6 +455,60 @@ showVersionClauses2(NVersions,S) :-
 	fail.
 showVersionClauses2(_,_).
 
+showFTA(NVersions,S) :-
+	peClause(H,_,Bs,Trans),
+	atomRename(H,NVersions,A),
+	bodyRename(Bs,NVersions,Bs1),
+	renamedTrans(Trans,A,Bs1,Trans1),
+	writeTrans(Trans1,S),
+	write(S,'.'),
+	nl(S),
+	fail.
+showFTA(_,_).
+
+writeTrans((L :- R),S) :-
+	lhsStates(R,Qs),
+	rhsState(L,Q),
+	fn(L,LHS,Qs),
+	write(S,(LHS -> Q)).
+	
+lhsStates([],[]).
+lhsStates([B|Bs],[Q|Qs]) :-
+	B =.. [Q|_],
+	lhsStates(Bs,Qs).
+	
+rhsState(L,Q) :-
+	L =.. [Q|_].
+	
+fn(L,LHS,Qs) :-
+	L =.. [_,T],
+	leaves(T,LHS,Qs,[]).
+	
+leaves('$VAR'(_),Q,[Q|Qs],Qs) :-
+	!.
+leaves([T|Ts],[U|Us],Qs0,Qs2) :-
+	!,
+	leaves(T,U,Qs0,Qs1),
+	leaves(Ts,Us,Qs1,Qs2).
+leaves([],[],Qs,Qs) :-
+	!.
+leaves(T,LHS,Qs0,Qs1) :-
+	T =.. [C|Ts],
+	leaves(Ts,Us,Qs0,Qs1),
+	LHS =.. [C|Us].
+
+renamedTrans((L1:-B1),A,Bs,(L2:-B2)) :-
+	L1 =.. [_|T],
+	A =.. [P|_],
+	L2 =.. [P|T],
+	renamedTransBody(B1,Bs,B2).
+	
+renamedTransBody([],[],[]).
+renamedTransBody([B1|Bs1],[B|Bs],[B2|Bs2]) :-
+	B1 =.. [_|T],
+	B =.. [P|_],
+	B2 =.. [P|T],
+	renamedTransBody(Bs1,Bs,Bs2).
 
 atomRename(atom(A,Ids),NVersions,A1) :-
 	functor(A,P,N),
@@ -475,12 +528,14 @@ bodyRename([B|Bs],NVersions,[B1|Bs1]) :-
 	bodyRename(Bs,NVersions,Bs1).
 	
 showPeClauses :-
-	peClause(H,Cs,Bs),
+	peClause(H,Cs,Bs,_),
 	write((H :- Cs,Bs)),
 	write('.'),
 	nl,
 	fail.
 showPeClauses.
+
+
 
 getIds(P/N,L,HIs) :-
 	member(pred(P/N,HIs), L),
