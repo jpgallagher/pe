@@ -1,3 +1,4 @@
+% Generate properties for PE using propagation back to the loop head
 :- module(props1,_).
 
 :- use_module(chclibs(setops)).
@@ -25,7 +26,7 @@ main(ArgV) :-
 	props1:setOptions(Options,File,Entry,OutS),
 	backEdges(File,Entry,Bs,Es,Vs),
 	write(Bs),nl,
-	setdiff(Es,Bs,Es1),
+	setdiff(Es,Bs,Es1), 	% remove the back edges
 	scc_graph(Es1,Vs,SCCs),
 	write(SCCs),nl,
 	start_ppl,
