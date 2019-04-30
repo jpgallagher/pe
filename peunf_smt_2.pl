@@ -6,7 +6,6 @@
 :- use_module(library(streams)).
 :- use_module(library(write)).
 :- use_module(library(read)).
-%:- use_module(library(dynamic)).
 :- use_module(library(lists)).
 :- use_module(library(aggregates)).
 :- use_module(chclibs(builtins)).
@@ -169,6 +168,7 @@ pe([(A :- Ids)|Gs],L,Us,BPs,Versions0,Versions2) :-
 	resultants(A,Cs,Us,Cls),
 	versionClauses(Cls,BPs,Ids,L,VCls),
 	storeVersionClauses(VCls),
+	%write('Iterate'),nl,
 	%showPeClauses,
 	newVersions(VCls,Versions0,Versions1,NewGs,Gs),
 	pe(NewGs,L,Us,BPs,Versions1,Versions2).
