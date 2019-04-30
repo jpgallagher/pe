@@ -25,10 +25,10 @@ main(ArgV) :-
 	get_options(ArgV,Options,_),
 	props1:setOptions(Options,File,Entry,OutS),
 	backEdges(File,Entry,Bs,Es,Vs),
-	write(Bs),nl,
+	%write(Bs),nl,
 	setdiff(Es,Bs,Es1), 	% remove the back edges
 	scc_graph(Es1,Vs,SCCs),
-	write(SCCs),nl,
+	%write(SCCs),nl,
 	start_ppl,
 	makeAllProps(SCCs,Bs),
 	end_ppl,
