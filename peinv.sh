@@ -15,7 +15,7 @@ function spec() {
    local query=$2
    local outfile=$3
    #echo "Performing query transformation"
-   $LIB/qa $infile -query "$2" -ans -o $resultdir/$f.qa.pl
+   $LIB/qa $infile -query "$2" -o $resultdir/$f.qa.pl
    #echo "Computing widening thresholds"
    $LIB/thresholds1 -prg $resultdir/$f.qa.pl -a -o wut.props
    #$PE/props -prg "$resultdir/$f.qa.pl" -l 1 -o wut.props
@@ -26,6 +26,7 @@ function spec() {
    $LIB/insertProps -prg $infile -props $resultdir/$f.qa.cha.pl -o $outfile
 }
 
+# partial evaluation with prop-based abstraction
 function pe() {
    local infile=$1
    local query=$1
@@ -33,6 +34,7 @@ function pe() {
    $PE/peunf_smt_2 -prg "$1" -entry "$2" -props "$resultdir/$f.props" -o "$resultdir/$f.pe.pl" -neg
 }
 
+# draw control flow graph
 function drawgraph() {
 	local infile=$1
 	$PE/drawcfg -prg "$infile" -o "$resultdir/cfg.txt"
@@ -41,18 +43,6 @@ function drawgraph() {
 }
 
 #=================
-
-draw=0
-while getopts "d" flag
-do
-   case $flag in
-   d) draw=1
-      shift
-   ;;
-   *)
-   ;;
-   esac
-done
 
 resultdir=$1_output
 f=`basename $1`
