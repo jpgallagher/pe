@@ -30,6 +30,8 @@
 :- dynamic(prop/2).
 :- dynamic(peClause/4).
 :- dynamic(negprops/0).
+:- dynamic(preserveInitPred/0).
+
 
 
 
@@ -64,6 +66,8 @@ recognised_option('-o',    outputFile(R),[R]).
 recognised_option('-props',propFile(R),[R]).
 recognised_option('-neg',  negprops,[]).
 recognised_option('-entry',entry(Q),[Q]).
+recognised_option('-init', preserveInitPred,[]).
+
 
 	
 setOptions(Options,File,Goal,OutS) :-
@@ -79,6 +83,8 @@ setOptions(Options,File,Goal,OutS) :-
 			OutS=user_output),
 	(member(negprops,Options) -> assert(negprops); true),
 	(member(propFile(PFile),Options), readPropFile(PFile); 
+			true),
+	(member(preserveInitPred,Options), assert(preserveInitPred); 
 			true).
 			
 
@@ -88,7 +94,8 @@ convertQueryString(Q,Q1) :-
 cleanup :-
 	retractall(prop(_,_)),
 	retractall(negprops),
-	retractall(peClause(_,_,_,_)).
+	retractall(peClause(_,_,_,_)),
+	retractall(preserveInitPred).
 	
 findBackEdges([P|Ps],M0,M3,Anc,Bs0,Bs3) :-
 	successors(P,Ss),
@@ -152,6 +159,7 @@ unfoldablePreds([],_,[]).
 unfoldablePreds([P|Ps],BPs,[P|Us]) :-
 	\+ member(P,BPs),
 	detPred(P),
+	(preserveInitPred -> \+ isInitPred(P); true),
 	!,
 	unfoldablePreds(Ps,BPs,Us).
 unfoldablePreds([_|Ps],BPs,Us) :-
@@ -161,6 +169,8 @@ hasDef(B) :-
 	my_clause(B,_,_),
 	!.
 
+isInitPred(P/_) :-
+	atom_concat(init,_,P).
 
 	
 pe([(A :- Ids)|Gs],L,Us,BPs,Versions0,Versions2) :-
