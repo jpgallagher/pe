@@ -207,8 +207,8 @@ ftaTransition(Trace,A,Qs,(L :- Qs)) :-
 	L =.. [P,Trace],
 	numbervars(Trace,0,_).
 	
-unfoldForward([B|Bs],Us,[B|R],Trs,Qs) :-
-	constraint(B,_),
+unfoldForward([B|Bs],Us,[B1|R],Trs,Qs) :-
+	constraint(B,B1),
 	!,
 	unfoldForward(Bs,Us,R,Trs,Qs).
 unfoldForward([B|Bs],Us,R,[Tr|Trs],Qs) :-

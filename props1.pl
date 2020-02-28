@@ -26,8 +26,9 @@ main(ArgV) :-
 	props1:setOptions(Options,File,Entry,OutS),
 	backEdges(File,Entry,Bs,Es,Vs),
 	%write(Bs),nl,
-	setdiff(Es,Bs,Es1), 	% remove the back edges
-	scc_graph(Es1,Vs,SCCs),
+	setdiff(Es,Bs,Es1), 	% remove the back edges 
+	setdiff(Vs,[(:-)/1],Vs1), 	% remove the directives
+	scc_graph(Es1,Vs1,SCCs),
 	%write(SCCs),nl,
 	start_ppl,
 	makeAllProps(SCCs,Bs),

@@ -216,8 +216,8 @@ ftaTransition(Trace,A,Qs,(L :- Qs)) :-
 	L =.. [P,Trace],
 	numbervars(Trace,0,_).
 	
-unfoldForward([B|Bs],Us,[B|R],Trs,Qs) :-
-	constraint(B,_),
+unfoldForward([B|Bs],Us,[B1|R],Trs,Qs) :-
+	constraint(B,B1),
 	!,
 	unfoldForward(Bs,Us,R,Trs,Qs).
 unfoldForward([B|Bs],Us,R,[Tr|Trs],Qs) :-
@@ -421,7 +421,19 @@ satisfiable(Cs) :-
 showVersionClauses(NVersions,L,S) :-
 	writeVersions(S, NVersions, L),
 	nl(S),
+	writeDirectives(S),
+	nl(S),
 	showVersionClauses2(NVersions,S).
+	
+writeDirectives(S) :-
+	my_directive(D),
+	numbervars(D,0,_),
+	write(S,':- '),
+	write(S,D),
+	write(S,'.'),
+	nl(S),
+	fail.
+writeDirectives(_).
 	
 writeVersions(S,[nversion(Q/M,constraint(Cs),P1)|Vs],L) :-
 	!,
@@ -452,10 +464,13 @@ writeVersions(S,[nversion(Q/M,Ids,P1)|Vs],L) :-
 writeVersions(_,[],_).
 		
 showVersionClauses2(NVersions,S) :-
-	peClause(H,Cs,Bs,_),
+	peClause(H,_Cs,Bs,Trans),
+	unfoldTrans(H,Trans,G,Ds,Es),
+	matchHeadVars(H,G),
+	matchBodyVars(Bs,Es), 	% are all constraint vars matched?
 	atomRename(H,NVersions,A),
 	bodyRename(Bs,NVersions,Bs1),
-	append(Cs,Bs1,B),
+	append(Ds,Bs1,B),
 	list2conj(B,Body),
 	writeq(S,A),
 	write(S,' :- '),
@@ -464,6 +479,42 @@ showVersionClauses2(NVersions,S) :-
 	nl(S),
 	fail.
 showVersionClauses2(_,_).
+
+unfoldTrans(atom(A,_),(TT :- _),G,Ds,Es) :-
+	functor(A,P,N),
+	functor(G,P,N), % create head of resultant
+	TT =.. [P,T],
+	unfoldTraceTerm(T,G,Ds,Es).
+	
+unfoldTraceTerm('$VAR'(_),H,[],[H]) :-
+	!.
+unfoldTraceTerm(T,H,Cs,Bs) :-
+	T =.. [C|Ts],
+	my_clause(H,B,C),
+	splitBody(B,Cs1,Bs1),
+	unfoldAllTraces(Ts,Bs1,Cs2,Bs),
+	append(Cs1,Cs2,Cs).
+
+unfoldAllTraces([],[],[],[]).
+unfoldAllTraces([T|Ts],[D|Ds],Cs,Bs) :-
+	unfoldTraceTerm(T,D,Cs1,Bs1),
+	unfoldAllTraces(Ts,Ds,Cs2,Bs2),
+	append(Cs1,Cs2,Cs),
+	append(Bs1,Bs2,Bs).
+
+splitBody([],[],[]).
+splitBody([C|B],[C|Cs1],Bs1) :-
+	constraint(C,_),
+	!,
+	splitBody(B,Cs1,Bs1).
+splitBody([B|Bs],Cs1,[B|Bs1]) :-
+	splitBody(Bs,Cs1,Bs1).
+
+matchHeadVars(atom(A,_),A).
+
+matchBodyVars([atom(A,_)|Bs],[A|As]) :-
+	matchBodyVars(Bs,As).
+matchBodyVars([],[]).
 
 showFTA(NVersions,S) :-
 	peClause(H,_,Bs,Trans),

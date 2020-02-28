@@ -29,9 +29,10 @@ function spec() {
 # partial evaluation with prop-based abstraction
 function pe() {
    local infile="$1"
-   local query="$2"
+   local sourcefile="$2"
+   local query="$3"
    $PE/props1 -prg "$infile" -entry "$query" -o "$resultdir/$f.props"
-   $PE/peunf_smt_2 -prg "$infile" -entry "$query" -props "$resultdir/$f.props" -o "$resultdir/$f.pe.pl" -neg
+   $PE/peunf_smt_2 -prg "$sourcefile" -entry "$query" -props "$resultdir/$f.props" -o "$resultdir/$f.pe.pl" -neg
 }
 
 # draw control flow graph
@@ -56,7 +57,7 @@ fi
 
 drawgraph "$1" "$resultdir/cfg.jpg"
 spec "$1" "$2" "$resultdir/$f.sp.pl"
-pe "$resultdir/$f.sp.pl" "$2"
+pe "$resultdir/$f.sp.pl" "$1" "$2"
 drawgraph "$resultdir/$f.pe.pl" "$resultdir/cfg.pe.jpg"
 rm -f "$resultdir/$f.qa.pl" "$resultdir/$f.props" "$resultdir/$f.sp.pl" "$resultdir/$f.qa.cha.pl"
 
