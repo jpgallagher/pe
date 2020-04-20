@@ -4,7 +4,7 @@ PE is a tool for partially evaluating Constrained Horn clauses.
 
 ## Programming 
 
-PE is written in Ciao and is interfaced with Parma polyhedra
+PE is written in Ciao and is interfaced with Parma Polyhedra
 library and Yices SMT solver for handling constraints.  
 
 ## Requirements
@@ -23,3 +23,22 @@ installed automatically:
 Note:  Installing RAHFT (`ciao get github.com/bishoksan/RAHFT`) includes installation of all the above dependencies, and the Yices and PPL libraries.
 
 * [dot](https://www.graphviz.org) for drawing control flow graphs.
+
+## Partial evaluation
+
+PE is carried out with respect to a fixed set of properties.  Properties are generated using the props.pl or props1.pl programs
+
+* See shell script pe.sh
+
+## Control Flow Refinement
+
+PE is used as the central component in a control-flow refinement algorithm.
+
+* See shell script cfr.sh
+
+## Verification of safety properties
+
+PE is used in an iterative algorithm for checking safety of a set of CHCs.
+
+* See shell script safe.sh
+
