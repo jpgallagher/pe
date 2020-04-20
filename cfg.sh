@@ -3,7 +3,7 @@
 # $1 = input file
 # $2 = entry goal
 
-# pe with invariants added first
+# Control flow refinement. 
 
 PE="."
 
