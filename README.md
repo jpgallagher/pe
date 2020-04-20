@@ -15,11 +15,11 @@ from git repository with `./ciao-boot.sh local-install`)
 The following dependendencies (including third-party code) need to be
 installed automatically:
 
-1. [Ciao bindings](https://github.com/ciao-lang/ciao_ppl) for
-   [Parma Polyhedra Library](https://bugseng.com/products/ppl/)
-   (`ciao get ciao_ppl`)
-2. [Ciao bindings](https://github.com/jfmc/ciao_yices) for
-   [Yices SMT solver](https://yices.csl.sri.com/)
-   (`ciao get github.com/jfmc/ciao_yices`)
-3. [CHCLibs](https://github.com/bishoksan/chclibs)
-   (`ciao get github.com/bishoksan/chclibs`)
+* [Ciao bindings](https://github.com/ciao-lang/ciao_ppl) for [Parma Polyhedra Library](https://bugseng.com/products/ppl/) (`ciao get ciao_ppl`)
+* [Ciao bindings](https://github.com/jfmc/ciao_yices) for [Yices SMT solver](https://yices.csl.sri.com/) (`ciao get github.com/jfmc/ciao_yices`)
+* [CHCLibs](https://github.com/bishoksan/chclibs) (`ciao get github.com/bishoksan/chclibs`)
+
+
+Note:  Installing RAHFT (`ciao get github.com/bishoksan/RAHFT`) includes installation of all the above dependencies, and the Yices and PPL libraries.
+
+* [dot](https://www.graphviz.org) for drawing control flow graphs.

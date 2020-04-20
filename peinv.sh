@@ -53,11 +53,15 @@ if (test ! -d $resultdir) then
         mkdir $resultdir
 fi
 
-
+# Main script - 
+# draw original cfg
 drawgraph "$1" "$resultdir/cfg.jpg"
+# Constraint specialisation
 spec "$1" "$2" "$resultdir/$f.sp.pl"
+# Property-based partial evaluation
 pe "$resultdir/$f.sp.pl" "$1" "$2"
+# Generate new control flow graph
 drawgraph "$resultdir/$f.pe.pl" "$resultdir/cfg.pe.jpg"
-#rm -f "$resultdir/$f.qa.pl" "$resultdir/$f.props" "$resultdir/$f.sp.pl" "$resultdir/$f.qa.cha.pl"
+rm -f "$resultdir/$f.qa.pl" "$resultdir/$f.props" "$resultdir/$f.sp.pl" "$resultdir/$f.qa.cha.pl"
 
  
