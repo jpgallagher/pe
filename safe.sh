@@ -1,10 +1,10 @@
 #!/bin/sh
 
+# Check safety of CHC clauses
+
 # $1 = input file
 # $2 = max number of iterations (default 5)
 
-
-LIB="/Users/jpg/ciao/build/bin"
 PE="/Users/jpg/Research/LP/clptools/predabs/pe"
 
 
@@ -13,15 +13,15 @@ function spec() {
    local infile=$1
    local outfile=$2
    #echo "Performing query transformation"
-   $LIB/qa $infile -query false -ans -o $resultdir/$f.qa.pl
+   chclibs-qa $infile -query false -ans -o $resultdir/$f.qa.pl
    #echo "Computing widening thresholds"
    #$LIB/thresholds1 -prg $resultdir/$f.qa.pl -a -o wut.props
    $PE/props -prg "$resultdir/$f.qa.pl" -l 1 -o wut.props
    
    #echo "Computing convex polyhedron approximation of QA clauses"
-   $LIB/cpascc -prg $resultdir/$f.qa.pl -cex "traceterm.out" -v -withwut -wfunc h79 -o $resultdir/$f.qa.cha.pl
+   chclibs-cpascc -prg $resultdir/$f.qa.pl -cex "traceterm.out" -v -withwut -wfunc h79 -o $resultdir/$f.qa.cha.pl
    #echo "Specialise clauses"
-   $LIB/insertProps -prg $infile -props $resultdir/$f.qa.cha.pl -o $outfile
+   chclibs-insertProps -prg $infile -props $resultdir/$f.qa.cha.pl -o $outfile
 }
 
 function checksafe() {
@@ -58,7 +58,7 @@ if (test ! -d $resultdir) then
 fi
 
 echo "Removal of redundant arguments"
-$LIB/raf $1 false $resultdir/$f.raf.pl
+chclibs-raf $1 false $resultdir/$f.raf.pl
 k=$2
 # set default iteration count to 5
 if (test -z "$k") then
@@ -96,6 +96,6 @@ if [[ $ret -eq 0 ]]; then
 		echo "UNKNOWN" >> "$resultfile"
 fi
 
-#rm widenpoints wut.props traceterm.out
+rm widenpoints wut.props traceterm.out
 
 

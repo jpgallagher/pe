@@ -5,8 +5,7 @@
 
 # pe with invariants added first
 
-LIB="/Users/jpg/ciao/build/bin"
-PE="/Users/jpg/Research/LP/clptools/predabs/pe"
+PE="."
 
 
 # constraint specialisation
@@ -23,7 +22,7 @@ function spec() {
    #echo "Computing convex polyhedron approximation of QA clauses"
    chclibs-cpascc -prg $resultdir/$f.qa.pl -cex "traceterm.out"  -withwut -wfunc h79 -o "$resultdir/$f.qa.cha.pl"
    #echo "Specialise clauses"
-   $LIB/insertProps -prg $infile -props $resultdir/$f.qa.cha.pl -o $outfile
+   chclibs-insertProps -prg $infile -props $resultdir/$f.qa.cha.pl -o $outfile
 }
 
 # partial evaluation with prop-based abstraction
