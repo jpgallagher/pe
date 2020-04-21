@@ -22,8 +22,8 @@
 
 main(ArgV) :-
 	cleanup,
-	get_options(ArgV,Options,_),
-	props1:setOptions(Options,File,Entry,OutS),
+	backEdges:get_options(ArgV,Options,_), 
+	backEdges:setOptions(Options,File,Entry,OutS),
 	backEdges(File,Entry,Bs,Es,Vs),
 	%write(Bs),nl,
 	setdiff(Es,Bs,Es1), 	% remove the back edges 
