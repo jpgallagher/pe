@@ -30,7 +30,7 @@ function pe() {
    local infile="$1"
    local sourcefile="$2"
    local query="$3"
-   $PE/props1 -prg "$infile" -entry "$query" -o "$resultdir/$f.props"
+   $PE/props2 -prg "$infile" -entry "$query" -o "$resultdir/$f.props"
    $PE/peunf_smt_2 -prg "$sourcefile" -entry "$query" -props "$resultdir/$f.props" -o "$resultdir/$f.pe.pl" -neg
 }
 
@@ -62,6 +62,7 @@ spec "$1" "$2" "$resultdir/$f.sp.pl"
 pe "$resultdir/$f.sp.pl" "$1" "$2"
 # Generate new control flow graph
 drawgraph "$resultdir/$f.pe.pl" "$resultdir/cfg.pe.jpg"
-rm -f "$resultdir/$f.qa.pl" "$resultdir/$f.props" "$resultdir/$f.sp.pl" "$resultdir/$f.qa.cha.pl"
+rm -f "$resultdir/$f.qa.pl" "$resultdir/$f.sp.pl" "$resultdir/$f.qa.cha.pl"
+#rm -f "$resultdir/$f.props" 
 
  
