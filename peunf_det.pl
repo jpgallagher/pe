@@ -97,8 +97,8 @@ unfoldForward([B|Bs],BPs,[B|R]) :-
 	!,
 	unfoldForward(Bs,BPs,R).
 unfoldForward([B|Bs],BPs,R) :-
-	determinate(B,[C]), 	% matches 1 clause
-	\+ member(C,BPs),
+	determinate(B,[_]), 	% matches 1 clause
+	%\+ member(C,BPs),
 	!,
 	my_clause(B,Body,_),
 	evalGuard(Body,Body1),
@@ -160,7 +160,7 @@ collectVersions([atom(A,Goal)|Bs],Vs0,Vs1,Gs0,Gs1) :-
 	collectVersions(Bs,Vs0,Vs1,Gs0,Gs1).
 collectVersions([atom(A,Goal)|Bs],Vs0,Vs1,Gs0,Gs1) :-
 	functor(A,P,N),
-	write_cyclic(A),nl,
+	%write_cyclic(A),nl,
 	collectVersions(Bs,[version(P/N,Goal)|Vs0],Vs1,Gs0,[Goal|Gs1]).
 collectVersions([],Vs,Vs,Gs,Gs).
 
