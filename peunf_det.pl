@@ -40,7 +40,10 @@ main(ArgV) :-
 	load_file(File),
 	functor(Goal,P,N),
 	canonical(Goal),
-	pe([Goal],[version(P/N,Goal)],AllVersions), 
+	cyclic_terms_extra:findall(C,(melt(Goal,Goal1),my_clause(Goal1,_,C)),Cs),
+	findBackEdges(Cs,[],_Ps,[],Bs,[]),
+	extractBackPreds(Bs,BPs),
+	pe([Goal],BPs,[version(P/N,Goal)],AllVersions), 
 	numberVersions(AllVersions,P/N,1,NVersions),
 	showVersionClauses(NVersions,OutS),
 	close(OutS).	
@@ -63,51 +66,50 @@ setOptions(Options,File,Goal,OutS) :-
 	(member(outputFile(OutFile),Options), open(OutFile,write,OutS); 
 			OutS=user_output).
 			
-
 convertQueryString(Q,Q1) :-
 	read_from_atom(Q,Q1).
-
 
 cleanup :-
 	retractall(peClause(_)).
 
-pe([A|Gs],Versions0,Versions2) :-
+pe([A|Gs],BPs,Versions0,Versions2) :-
 	cyclic_melt(A,H),
-	resultants(H,Cls),
+	resultants(H,BPs,Cls),
 	versionClauses(Cls,A,VCls),
 	storeVersionClauses(VCls),
 	newVersions(VCls,Versions0,Versions1,NewGs,Gs),
-	pe(NewGs,Versions1,Versions2).
-pe([],Vs,Vs).
+	pe(NewGs,BPs,Versions1,Versions2).
+pe([],_,Vs,Vs).
 
-resultants(A,Cls) :-
+resultants(A,BPs,Cls) :-
 	cyclic_terms_extra:findall((A :- R),(
 			my_clause(A,B,_),
-			unfoldForward(B,R),
+			unfoldForward(B,BPs,R),
 			cyclic_terms_extra:numbervars((A,R),0,_)),
 		Cls).
 
-unfoldForward([A=B|Bs],R) :-
+unfoldForward([A=B|Bs],BPs,R) :-
 	!,
 	A=B,
-	unfoldForward(Bs,R).	
-unfoldForward([B|Bs],[B|R]) :-
+	unfoldForward(Bs,BPs,R).	
+unfoldForward([B|Bs],BPs,[B|R]) :-
 	builtin(B),
 	!,
-	unfoldForward(Bs,R).
-unfoldForward([B|Bs],R) :-
-	determinate(B), 	% matches 0 or 1 clause heads
+	unfoldForward(Bs,BPs,R).
+unfoldForward([B|Bs],BPs,R) :-
+	determinate(B,[C]), 	% matches 1 clause
+	\+ member(C,BPs),
 	!,
 	my_clause(B,Body,_),
 	evalGuard(Body,Body1),
-	unfoldForward(Body1,R1),
-	unfoldForward(Bs,R2),
+	unfoldForward(Body1,BPs,R1),
+	unfoldForward(Bs,BPs,R2),
 	append(R1,R2,R).
-unfoldForward([B|Bs],[B|R]) :-
-	unfoldForward(Bs,R).
-unfoldForward([],[]).
+unfoldForward([B|Bs],BPs,[B|R]) :-
+	unfoldForward(Bs,BPs,R).
+unfoldForward([],_,[]).
 
-determinate(B) :-
+determinate(B,Cs) :-
 	cyclic_terms_extra:findall(C,(my_clause(B,Bs,C),evalGuard(Bs,_)),Cs),
 	length(Cs,N),
 	N=<1.
@@ -158,6 +160,7 @@ collectVersions([atom(A,Goal)|Bs],Vs0,Vs1,Gs0,Gs1) :-
 	collectVersions(Bs,Vs0,Vs1,Gs0,Gs1).
 collectVersions([atom(A,Goal)|Bs],Vs0,Vs1,Gs0,Gs1) :-
 	functor(A,P,N),
+	write_cyclic(A),nl,
 	collectVersions(Bs,[version(P/N,Goal)|Vs0],Vs1,Gs0,[Goal|Gs1]).
 collectVersions([],Vs,Vs,Gs,Gs).
 
@@ -168,8 +171,13 @@ storeVersionClauses([(H :- Bs)|VCls]) :-
 		assert(peClause((H,Bs)))),
 	storeVersionClauses(VCls).
 
-
-		
+write_cyclic(Goal) :-
+	cyclic_term(Goal),
+	!,
+	uncycle_term(Goal,T),
+	write(T).
+write_cyclic(Goal) :-
+	write(Goal).
 showVersionClauses(NVersions,S) :-
 	peClause(C),
 	(C=cyclic(C1) -> 
@@ -286,3 +294,60 @@ cmelteach([],[]).
 cmelteach([X|Xs],[Y|Ys]) :-
     cmelt(X,Y),
     cmelteach(Xs,Ys).
+    
+% Dependency graph
+
+findBackEdges([P|Ps],M0,M3,Anc,Bs0,Bs3) :-
+	successors(P,Ss),
+	getBackEdges(Ss,P,Anc,Bs0,Bs1),
+	marking(Ss,M0,M1,Ss1),
+	findBackEdges(Ss1,[P|M1],M2,[P|Anc],Bs1,Bs2),
+	findBackEdges(Ps,[P|M2],M3,Anc,Bs2,Bs3).
+findBackEdges([],M,M,_,Bs,Bs).
+
+extractBackPreds([(_-P)|Bs],Ps1) :-
+	extractBackPreds(Bs,Ps),
+	insertElement(Ps,P,Ps1).
+extractBackPreds([],[]).
+
+insertElement(Ps,P,Ps) :-
+	member(P,Ps),
+	!.
+insertElement(Ps,P,[P|Ps]).
+
+successors(C,Ss) :-
+	setof(C1, [H,B,B1]^(
+			my_clause(H,Bs,C),
+			bodyPred(Bs,B),
+			my_clause(B,B1,C1)),
+			Ss),
+	!.
+successors(_,[]).
+
+bodyPred([B|_],B) :-
+	hasDef(B).
+bodyPred([B|_],B) :-
+	\+ constraint(B,_),
+	\+ builtin(B).
+bodyPred([_|Bs],B) :-
+	bodyPred(Bs,B).
+
+getBackEdges([],_,_,Bs,Bs).
+getBackEdges([Q|Qs],P,Anc,[P-Q|Bs0],Bs1) :-
+	member(Q,[P|Anc]),
+	!,
+	getBackEdges(Qs,P,Anc,Bs0,Bs1).
+getBackEdges([_|Qs],P,Anc,Bs0,Bs1) :-
+	getBackEdges(Qs,P,Anc,Bs0,Bs1).
+
+marking([],M,M,[]).
+marking([Q|Qs],M0,M1,Ss) :-
+	member(Q,M0),
+	!,
+	marking(Qs,M0,M1,Ss).
+marking([Q|Qs],M0,M1,[Q|Ss]) :-
+	marking(Qs,M0,M1,Ss).
+	
+hasDef(B) :-
+	my_clause(B,_,_),
+	!.

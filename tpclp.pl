@@ -89,8 +89,8 @@ iterate :-
 	assert(operatorCount(K1)),
 	retractflags(K),
 	!,
-	%write(K),nl,
-	%showallfacts(user_output),
+	write(K),nl,
+	showallfacts(user_output),
 	iterate.
 iterate.
 

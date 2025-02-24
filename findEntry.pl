@@ -1,10 +1,5 @@
 :- module(findEntry, [main/1, findEntry/1], [assertions, isomodes, doccomments, dynamic]).
 
-%! \title Simple program loader
-%
-%  \module
-%    Load clauses in `my_clause/3` (keeps a unique identifer for each
-%    clause). Drops any `:- _` declaration.
 
 :- use_module(library(operators)).
 :- use_module(engine(runtime_control), [set_prolog_flag/2]).

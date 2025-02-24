@@ -42,7 +42,8 @@ function checksafe() {
 function pe() {
     local file=$1
     local outfile=$2
-    $PE/props -prg "$file" -l 3 -o "$resultdir/$f.props"
+    $PE/props1 -prg "$file" -entry false -o "$resultdir/$f.props"
+    #$PE/props -prg "$file" -l 3 -o "$resultdir/$f.props"
     $PE/peunf_smt_2 -prg "$file" -entry false -props "$resultdir/$f.props" -o "$resultdir/$f.pe.pl" 
 }
 

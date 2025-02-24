@@ -6,5 +6,5 @@ PE="."
 for file in $1/*.pl
 do
    entry=`echo $($PE/findEntry $file)`
-   $PE/peinv.sh $file $entry
+   $PE/cfr.sh $file $entry
 done

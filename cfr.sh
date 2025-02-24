@@ -16,8 +16,8 @@ function spec() {
    #echo "Performing query transformation"
    chclibs-qa $infile -query "$2" -o $resultdir/$f.qa.pl
    #echo "Computing widening thresholds"
-   chclibs-thresholds1 -prg $resultdir/$f.qa.pl -a -o wut.props
-   #$PE/props -prg "$resultdir/$f.qa.pl" -l 1 -o wut.props
+   #chclibs-thresholds1 -prg $resultdir/$f.qa.pl -a -o wut.props
+   $PE/props -prg "$resultdir/$f.qa.pl" -l 1 -o wut.props
    
    #echo "Computing convex polyhedron approximation of QA clauses"
    chclibs-cpascc -prg $resultdir/$f.qa.pl -cex "traceterm.out"  -withwut -wfunc h79 -o "$resultdir/$f.qa.cha.pl"
@@ -30,7 +30,7 @@ function pe() {
    local infile="$1"
    local sourcefile="$2"
    local query="$3"
-   $PE/props2 -prg "$infile" -entry "$query" -o "$resultdir/$f.props"
+   $PE/props1 -prg "$infile" -entry "$query" -o "$resultdir/$f.props"
    $PE/peunf_smt_2 -prg "$sourcefile" -entry "$query" -props "$resultdir/$f.props" -o "$resultdir/$f.pe.pl" -neg
 }
 

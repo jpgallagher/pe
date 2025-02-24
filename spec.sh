@@ -40,5 +40,5 @@ fi
 
 spec "$1" "$2" "$resultdir/$f.sp.pl"
 
-rm -f $resultdir/$f.qa.pl $resultdir/$f.qa.cha.pl wut.props 
+#rm -f $resultdir/$f.qa.pl $resultdir/$f.qa.cha.pl wut.props 
  
