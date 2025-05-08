@@ -11,6 +11,10 @@
 
 # Constraint specialisation
 
+# Example usage:
+# ./spec.sh myfile.pl  "main(_,_,_,_)" 1
+# Results are found in the directory myfile.pl_output
+
 PE="."
 
 
