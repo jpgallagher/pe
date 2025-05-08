@@ -42,3 +42,10 @@ PE is used in an iterative algorithm for checking safety of a set of CHCs.
 
 * See shell script safe.sh
 
+## Constraint specialisation
+
+(Does not use PE).  Strengthens constraints in a set of CHCs with respect to an entry goal.
+adding invariants to the clause bodies.
+
+* See shell script spec.sh
+
