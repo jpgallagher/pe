@@ -15,7 +15,7 @@
 # ./spec.sh myfile.pl  "main(_,_,_,_)" 1
 # Results are found in the directory myfile.pl_output
 
-PE="."
+PE="/Users/jpg/Library/CloudStorage/OneDrive-RoskildeUniversitet/Research/LP/clptools/predabs/pe" 
 
 
 # constraint specialisation
@@ -41,7 +41,7 @@ function spec() {
    esac
    
    #echo "Computing convex polyhedron approximation of QA clauses"
-   chclibs-cpascc -prg $resultdir/$f.qa.pl -delaywidening 0 narrowiterations 0 -threshold $resultdir/wut.props -cex "traceterm.out"  -withwut -wfunc h79 -o $resultdir/$f.qa.cha.pl
+   chclibs-cpascc -prg $resultdir/$f.qa.pl -delaywidening 0 narrowiterations 0 -threshold $resultdir/wut.props -cex $resultdir/traceterm.out  -withwut -wfunc h79 -widenpoints $resultdir/widenpoints -o $resultdir/$f.qa.cha.pl
    #echo "Specialise clauses"
    chclibs-insertProps -prg $infile -props $resultdir/$f.qa.cha.pl -o $outfile
 }
